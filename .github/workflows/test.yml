@@ -1,0 +1,50 @@
+name: Chaos Hunting Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  dirsearch:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+    - name: Install packages
+      run: |
+        pip install httpx dirsearch
+    - name: Download urls txt file
+      run: |
+        wget https://raw.githubusercontent.com/sureshsharma099/.github-workflows/main/.github/workflows/sbx.txt -o urls.txt
+    - name: Download wordlist txt file
+      run: |
+        wget https://raw.githubusercontent.com/sureshsharma099/.github-workflows/main/.github/workflows/swagger.txt -o wordlist.txt
+    - name: Run dirsearch for each URL in urls.txt
+      run: |
+        echo "" > result.txt # Clear the existing file or create a new one
+        while read url; do
+          dirsearch -u "$url" -w wordlist.txt -t 20 --include-status="200,301,302" --user-agent='Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0' | grep -E "^200" | awk '{print $2}' | sed "s#^#${url}/#g" >> result.txt
+          curl -H "Content-Type: application/json" -d '{"content": "\n```'"$(cat result.txt)"'```"}' "https://discord.com/api/webhooks/${{ secrets.WEBHOOK_ID }}/${{ secrets.WEBHOOK_TOKEN }}"
+        done < urls.txt
+        curl bashupload.com -T result.txt
+    - name: Get page titles and send valid URLs to Discord
+      run: |
+        valid_urls=""
+        while read url; do
+          title=$(httpx -title "$url")
+          if [[ "$title" != "" ]]; then
+            echo "$url $title" >> valid_result.txt
+            valid_urls+="$url\n"
+          fi
+        done < result.txt
+        if [[ "$valid_urls" != "" ]]; then
+          echo "Valid result found: $valid_urls"
+          curl -H "Content-Type: application/json" -d '{"content": "New result found:\n```'"$(cat valid_result.txt)"'```"}' "https://discord.com/api/webhooks/${{ secrets.WEBHOOK_ID }}/${{ secrets.WEBHOOK_TOKEN }}"
+        else
+          echo "No valid results found"
+        fi
