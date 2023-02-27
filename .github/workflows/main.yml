@@ -1,4 +1,4 @@
-name: Chaos Hunting Workfloww
+name: Chaos Hunting Workflow
 
 on:
   push:
@@ -24,18 +24,25 @@ jobs:
     - name: Download wordlist txt file
       run: |
         wget https://raw.githubusercontent.com/sureshsharma099/.github-workflows/main/.github/workflows/wordlist.txt -o wordlist.txt
-    - name: Run dirsearch
+    - name: Run dirsearch for each URL in urls.txt
       run: |
-        dirsearch -u urls.txt -w wordlist.txt -t 5 --format plain -o result.txt
-    - name: Get page titles
+        echo "" > result.txt # Clear the existing file or create a new one
+        while read url; do
+          dirsearch -u "$url" -w wordlist.txt -t 8 --include-status="200,301,302" --user-agent='Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0' | grep -E "^200" | awk '{print $2}' | sed "s#^#${url}/#g" >> result.txt
+        done < urls.txt
+    - name: Get page titles and send valid URLs to Discord
       run: |
-        for url in $(cat result.txt | grep "200 OK" | cut -d ' ' -f3); do
-          title=$(httpx -title $url);
-          echo "$title $url" >> result.txt;
-        done
-    - name: Send results to Discord
-      uses: appleboy/discord-action@0.0.3
-      with:
-        webhook_id: ${{ secrets.WEBHOOK_ID }}
-        webhook_token: ${{ secrets.WEBHOOK_TOKEN }}
-        message: "New result found: $(cat result.txt)"
+        valid_urls=""
+        while read url; do
+          title=$(httpx -title "$url")
+          if [[ "$title" != "" ]]; then
+            echo "$url $title" >> valid_result.txt
+            valid_urls+="$url\n"
+          fi
+        done < result.txt
+        if [[ "$valid_urls" != "" ]]; then
+          echo "Valid result found: $valid_urls"
+          curl -H "Content-Type: application/json" -d '{"content": "New result found:\n```'"$(cat valid_result.txt)"'```"}' "https://discord.com/api/webhooks/${{ secrets.WEBHOOK_ID }}/${{ secrets.WEBHOOK_TOKEN }}"
+        else
+          echo "No valid results found"
+        fi
