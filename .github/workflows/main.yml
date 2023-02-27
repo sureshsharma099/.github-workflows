@@ -1,4 +1,4 @@
-name: Bug Hunting Workflow
+name: Chaos Hunting Workflow
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
         gdown --id 1w4pQll27LK5l2Z7UrHY179MtIR_FFrQA --output urls.txt
     - name: Run dirsearch
       run: |
-        dirsearch -u urls.txt -w wordlist.txt -t 5 --simple-report=result.txt
+        dirsearch -u urls.txt -w wordlist.txt -t 5 --format plain -o result.txt
     - name: Get page titles
       run: |
         for url in $(cat result.txt | grep "200 OK" | cut -d ' ' -f3); do
