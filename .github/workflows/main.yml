@@ -21,6 +21,9 @@ jobs:
     - name: Download urls txt file
       run: |
         gdown --id 1w4pQll27LK5l2Z7UrHY179MtIR_FFrQA --output urls.txt
+    - name: Download wordlist txt file
+      run: |
+        wget https://raw.githubusercontent.com/sureshsharma099/.github-workflows/main/.github/workflows/wordlist.txt -o wordlist.txt
     - name: Run dirsearch
       run: |
         dirsearch -u urls.txt -w wordlist.txt -t 5 --format plain -o result.txt
