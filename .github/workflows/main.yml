@@ -28,12 +28,13 @@ jobs:
         wget https://raw.githubusercontent.com/sureshsharma099/.github-workflows/main/.github/workflows/wordlist.txt -O wordlist.txt
     - name: Run dirsearch for each URL in urls.txt
       run: |
-        cat urls.txt | parallel --jobs 4 "dirsearch -u {} -w wordlist.txt -t 14 --include-status=\"200,301,302\" --user-agent='Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0' --format plain -o temp.txt && if [ -f temp.txt ]; then cat temp.txt | tail -n +2 | awk 'NF' | awk '{print $3}' | tee -a result.txt && rm temp.txt; fi"
+        cat urls.txt | parallel --jobs 20 "dirsearch -u {} -w wordlist.txt -t 20 --include-status=\"200,301,302\" --user-agent='Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0' --format plain -o temp.txt && if [ -f temp.txt ]; then cat temp.txt | tail -n +2 | awk 'NF' | awk '{print $3}' | tee -a result.txt && rm temp.txt; fi"
         if [ -s "result.txt" ]; then
           cat result.txt
           curl -H "Content-Type: application/json" -d '{"content": "\n```'"$(cat result.txt)"'```"}' "https://discord.com/api/webhooks/${{ secrets.WEBHOOK_ID }}/${{ secrets.WEBHOOK_TOKEN }}"
         fi
-        curl bashupload.com -T result.txt
+        bashupload=$(curl bashupload.com -T result.txt)
+        curl -H "Content-Type: application/json" -d '{"content": "\n```'"$(echo "$bashupload")"'```"}' "https://discord.com/api/webhooks/${{ secrets.WEBHOOK_ID }}/${{ secrets.WEBHOOK_TOKEN }}"
     - name: Get page titles and send valid URLs to Discord
       run: |
         valid_urls=""
