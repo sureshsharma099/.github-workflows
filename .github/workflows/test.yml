@@ -28,12 +28,12 @@ jobs:
         wget https://raw.githubusercontent.com/sureshsharma099/.github-workflows/main/.github/workflows/swagger.txt -O wordlist.txt
     - name: Run dirsearch for each URL in urls.txt
       run: |
-        curl -H "Content-Type: application/json" -X POST -d '{"content": "SBX Hunting Workflow"}' https://discord.com/api/webhooks/1079741266520186951/TGX2RNq4Wc8daXCR06AhqRCarr1xnMd4GSZheVQlFatI3MLKZOerYx4aahLYKineyEpr
-        cat urls.txt | parallel --jobs 20 "dirsearch -u {} -w wordlist.txt -t 20 --include-status=\"200,301,302\" --user-agent='Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0' --format plain -o temp.txt && if [ -f temp.txt ]; then cat temp.txt | tail -n +2 | awk 'NF' | awk '{print $3}' | tee -a result.txt && curl -X POST -H "Content-Type: multipart/form-data" -F "content=$(cat result.txt)" https://discord.com/api/webhooks/1079741266520186951/TGX2RNq4Wc8daXCR06AhqRCarr1xnMd4GSZheVQlFatI3MLKZOerYx4aahLYKineyEpr && rm temp.txt; fi"
-        curl -X POST -H "Content-Type: multipart/form-data" -F "content=$(cat result.txt)" https://discord.com/api/webhooks/1079741266520186951/TGX2RNq4Wc8daXCR06AhqRCarr1xnMd4GSZheVQlFatI3MLKZOerYx4aahLYKineyEpr
+        curl -H "Content-Type: application/json" -X POST -d '{"content": "SBX Hunting Workflow"}' https://discord.com/api/webhooks/1079741266520186951/TGX2RNq4Wc8daXCR06AhqRCarr1xnMd4GSZheVQlFatI3MLKZOerYx4aahLYKineyEpr        
+        cat urls.txt | parallel --jobs 20 "dirsearch -u {} -w wordlist.txt -t 20 --include-status=\"200,301,302\" --user-agent='Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0' --format plain -o temp.txt && if [ -f temp.txt ]; then cat temp.txt | tail -n +2 | awk 'NF' | awk '{print $3}' | tee -a result.txt && curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "content=$(cat result.txt)" https://discord.com/api/webhooks/1079741266520186951/TGX2RNq4Wc8daXCR06AhqRCarr1xnMd4GSZheVQlFatI3MLKZOerYx4aahLYKineyEpr && rm temp.txt; fi"
+        curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "content=$(cat result.txt)" https://discord.com/api/webhooks/1079741266520186951/TGX2RNq4Wc8daXCR06AhqRCarr1xnMd4GSZheVQlFatI3MLKZOerYx4aahLYKineyEpr
         cat result.txt
         bashupload=$(curl bashupload.com -T result.txt)
-        curl -X POST -H "Content-Type: multipart/form-data" -F "content=$(echo '$bashupload')" https://discord.com/api/webhooks/1079741266520186951/TGX2RNq4Wc8daXCR06AhqRCarr1xnMd4GSZheVQlFatI3MLKZOerYx4aahLYKineyEpr
+        curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "content=$(echo "$bashupload")" https://discord.com/api/webhooks/1079741266520186951/TGX2RNq4Wc8daXCR06AhqRCarr1xnMd4GSZheVQlFatI3MLKZOerYx4aahLYKineyEpr
     - name: Get page titles and send valid URLs to Discord
       run: |
         valid_urls=""
@@ -47,7 +47,7 @@ jobs:
         if [[ "$valid_urls" != "" ]]; then
           echo "Valid result found: $valid_urls"
           curl -H "Content-Type: application/json" -X POST -d '{"content": "OVERALL RESULT BELOW"}' https://discord.com/api/webhooks/1079741266520186951/TGX2RNq4Wc8daXCR06AhqRCarr1xnMd4GSZheVQlFatI3MLKZOerYx4aahLYKineyEpr          
-          curl -X POST -H "Content-Type: multipart/form-data" -F "content=$(echo '$valid_urls')" https://discord.com/api/webhooks/1079741266520186951/TGX2RNq4Wc8daXCR06AhqRCarr1xnMd4GSZheVQlFatI3MLKZOerYx4aahLYKineyEpr
+          curl -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "content=$(echo "$valid_urls")" https://discord.com/api/webhooks/1079741266520186951/TGX2RNq4Wc8daXCR06AhqRCarr1xnMd4GSZheVQlFatI3MLKZOerYx4aahLYKineyEpr
         else
           echo "No valid results found"
         fi
