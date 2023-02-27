@@ -31,7 +31,6 @@ jobs:
           dirsearch -u "$url" -w wordlist.txt -t 12 --include-status="200,301,302" --user-agent='Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0' | awk '{print $2}' | sed "s#^#${url}/#g" >> result.txt
           if [ -s "result.txt" ]; then
               curl -H "Content-Type: application/json" -d '{"content": "\n```'"$(cat result.txt)"'```"}' "https://discord.com/api/webhooks/${{ secrets.WEBHOOK_ID }}/${{ secrets.WEBHOOK_TOKEN }}"
-          else
           fi
         done < urls.txt
         curl bashupload.com -T result.txt
