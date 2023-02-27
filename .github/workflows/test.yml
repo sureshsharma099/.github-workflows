@@ -20,10 +20,10 @@ jobs:
         pip install httpx dirsearch
     - name: Download urls txt file
       run: |
-        wget https://raw.githubusercontent.com/sureshsharma099/.github-workflows/main/.github/workflows/sbx.txt -o urls.txt
+        wget https://raw.githubusercontent.com/sureshsharma099/.github-workflows/main/.github/workflows/sbx.txt -O urls.txt
     - name: Download wordlist txt file
       run: |
-        wget https://raw.githubusercontent.com/sureshsharma099/.github-workflows/main/.github/workflows/swagger.txt -o wordlist.txt
+        wget https://raw.githubusercontent.com/sureshsharma099/.github-workflows/main/.github/workflows/swagger.txt -O wordlist.txt
     - name: Run dirsearch for each URL in urls.txt
       run: |
         echo "" > result.txt # Clear the existing file or create a new one
