@@ -1,4 +1,4 @@
-name: Chaos Hunting Workflow
+name: SBX Hunting Workflow
 
 on:
   push:
