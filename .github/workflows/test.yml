@@ -33,7 +33,8 @@ jobs:
           cat result.txt
           curl -H "Content-Type: application/json" -d '{"content": "\n```'"$(cat result.txt)"'```"}' "https://discord.com/api/webhooks/${{ secrets.WEBHOOK_ID }}/${{ secrets.WEBHOOK_TOKEN }}"
         fi
-        curl bashupload.com -T result.txt
+        bashupload=$(curl bashupload.com -T result.txt)
+        curl -H "Content-Type: application/json" -d '{"content": "\n```'"$(echo "$bashupload")"'```"}' "https://discord.com/api/webhooks/${{ secrets.WEBHOOK_ID }}/${{ secrets.WEBHOOK_TOKEN }}"
     - name: Get page titles and send valid URLs to Discord
       run: |
         valid_urls=""
