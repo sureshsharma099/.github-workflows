@@ -49,7 +49,7 @@ jobs:
         done < result.txt
         if [[ "$valid_urls" != "" ]]; then
           echo "Valid result found: $valid_urls"
-          curl -H "Content-Type: application/json" -d '{"content": "New result found:\n```'"$(cat valid_result.txt)"'```"}' "https://discord.com/api/webhooks/${{ secrets.WEBHOOK_ID }}/${{ secrets.WEBHOOK_TOKEN }}"
+          curl -H "Content-Type: application/json" -X POST -d '{"content": "New result found:\n```'"$(cat valid_result.txt)"'```"}' https://discord.com/api/webhooks/1079741266520186951/TGX2RNq4Wc8daXCR06AhqRCarr1xnMd4GSZheVQlFatI3MLKZOerYx4aahLYKineyEpr
         else
           echo "No valid results found"
         fi
