@@ -17,22 +17,22 @@ jobs:
         python-version: '3.8'
     - name: Install packages
       run: |
-        pip install httpx google-auth gdown
+        pip install httpx google-auth gdown dirsearch
     - name: Download urls txt file
       run: |
         gdown --id 1w4pQll27LK5l2Z7UrHY179MtIR_FFrQA --output urls.txt
     - name: Run dirsearch
       run: |
-        while read -r url; do
-          python3 dirsearch.py -u "$url" --http-status-code-only --plain-text-report="result.txt"
-        done < urls.txt
-    - name: Extract titles
+        dirsearch -u urls.txt -w wordlist.txt -t 5 --simple-report=result.txt
+    - name: Get page titles
       run: |
-        python3 extract_titles.py result.txt
-        echo "::set-output name=title::$(cat result.txt)"
-    - name: Send Discord notification
+        for url in $(cat result.txt | grep "200 OK" | cut -d ' ' -f3); do
+          title=$(httpx -title $url);
+          echo "$title $url" >> result.txt;
+        done
+    - name: Send results to Discord
       uses: appleboy/discord-action@0.0.3
       with:
         webhook_id: ${{ secrets.WEBHOOK_ID }}
         webhook_token: ${{ secrets.WEBHOOK_TOKEN }}
-        message: "Found new vulnerability: ${{ steps.extract_titles.outputs.title }}"
+        message: "New result found: $(cat result.txt)"
