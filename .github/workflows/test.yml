@@ -28,9 +28,11 @@ jobs:
       run: |
         while read url; do
           dirsearch -u "$url" -w wordlist.txt -t 14 --include-status="200,301,302" --user-agent='Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0' --format plain -o temp.txt
-          cat temp.txt | tail -n +2 | awk 'NF' | awk '{print $3}' | tee -a result.txt
-          cat result.txt
-          rm temp.txt
+          if [ -f "temp.txt" ]; then
+              cat temp.txt | tail -n +2 | awk 'NF' | awk '{print $3}' | tee -a result.txt
+              cat result.txt
+              rm temp.txt
+          fi
           if [ -s "result.txt" ]; then
               cat result.txt
               curl -H "Content-Type: application/json" -d '{"content": "\n```'"$(cat result.txt)"'```"}' "https://discord.com/api/webhooks/${{ secrets.WEBHOOK_ID }}/${{ secrets.WEBHOOK_TOKEN }}"
