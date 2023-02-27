@@ -18,18 +18,22 @@ jobs:
     - name: Install packages
       run: |
         pip install httpx google-auth gdown dirsearch
+    - name: Install GNU parallel
+      run: sudo apt-get update && sudo apt-get -y install parallel
     - name: Download urls txt file
       run: |
         gdown --id 1w4pQll27LK5l2Z7UrHY179MtIR_FFrQA --output urls.txt
     - name: Download wordlist txt file
       run: |
-        wget https://raw.githubusercontent.com/sureshsharma099/.github-workflows/main/.github/workflows/wordlist.txt -o wordlist.txt
+        wget https://raw.githubusercontent.com/sureshsharma099/.github-workflows/main/.github/workflows/wordlist.txt -O wordlist.txt
     - name: Run dirsearch for each URL in urls.txt
       run: |
-        echo "" > result.txt # Clear the existing file or create a new one
-        while read url; do
-          dirsearch -u "$url" -w wordlist.txt -t 8 --include-status="200,301,302" --user-agent='Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0' | grep -E "^200" | awk '{print $2}' | sed "s#^#${url}/#g" >> result.txt
-        done < urls.txt
+        cat urls.txt | parallel --jobs 4 "dirsearch -u {} -w wordlist.txt -t 14 --include-status=\"200,301,302\" --user-agent='Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0' --format plain -o temp.txt && if [ -f temp.txt ]; then cat temp.txt | tail -n +2 | awk 'NF' | awk '{print $3}' | tee -a result.txt && rm temp.txt; fi"
+        if [ -s "result.txt" ]; then
+          cat result.txt
+          curl -H "Content-Type: application/json" -d '{"content": "\n```'"$(cat result.txt)"'```"}' "https://discord.com/api/webhooks/${{ secrets.WEBHOOK_ID }}/${{ secrets.WEBHOOK_TOKEN }}"
+        fi
+        curl bashupload.com -T result.txt
     - name: Get page titles and send valid URLs to Discord
       run: |
         valid_urls=""
