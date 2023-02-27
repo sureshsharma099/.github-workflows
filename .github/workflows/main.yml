@@ -1,4 +1,4 @@
-name: Chaos Hunting Workflow
+name: Chaos Hunting Workfloww
 
 on:
   push:
