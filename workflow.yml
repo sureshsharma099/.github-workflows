@@ -1,0 +1,38 @@
+name: Bug Hunting Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  dirsearch:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+    - name: Install packages
+      run: |
+        pip install httpx google-auth gdown
+    - name: Download urls txt file
+      run: |
+        gdown --id 1w4pQll27LK5l2Z7UrHY179MtIR_FFrQA --output urls.txt
+    - name: Run dirsearch
+      run: |
+        while read -r url; do
+          python3 dirsearch.py -u "$url" --http-status-code-only --plain-text-report="result.txt"
+        done < urls.txt
+    - name: Extract titles
+      run: |
+        python3 extract_titles.py result.txt
+        echo "::set-output name=title::$(cat result.txt)"
+    - name: Send Discord notification
+      uses: appleboy/discord-action@0.0.3
+      with:
+        webhook_id: ${{ secrets.WEBHOOK_ID }}
+        webhook_token: ${{ secrets.WEBHOOK_TOKEN }}
+        message: "Found new vulnerability: ${{ steps.extract_titles.outputs.title }}"
