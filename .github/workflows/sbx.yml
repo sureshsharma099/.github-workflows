@@ -1,0 +1,74 @@
+name: SBX Hunting Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  dirsearch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3.3.0
+
+      - name: Install packages
+        run: |
+          pip install httpx dirsearch
+          sudo apt-get update && sudo apt-get -y install parallel
+
+      - name: Download urls txt file
+        run: wget https://raw.githubusercontent.com/sureshsharma099/.github-workflows/main/.github/workflows/sbx.txt -O urls.txt
+
+      - name: Download wordlist txt file
+        run: wget https://raw.githubusercontent.com/sureshsharma099/.github-workflows/main/.github/workflows/swagger.txt -O wordlist.txt
+
+      - name: Send message to slack
+        uses: rtCamp/action-slack-notify@v2.2.0
+        env:
+          SLACK_COLOR: "#36a64f"
+          SLACK_TITLE: "SBX Hunting Workflow"
+          SLACK_MESSAGE: "Starting dirsearch"
+        with:
+          status: ${{ job.status }}
+
+      - name: Run dirsearch
+        run: |
+          cat urls.txt | parallel -j 5 'dirsearch -u {} -w wordlist.txt -t 20 --include-status="200,301,302" --user-agent="Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0" --format plain -o temp.txt'
+          cat temp.txt | tail -n +2 | awk 'NF' | awk '{print $3}' > result.txt
+
+      - name: Upload result.txt to bashupload.com
+        id: upload_result
+        run: |
+          curl --upload-file result.txt https://bashupload.com | awk '{print $NF}' > upload_url.txt
+        continue-on-error: true
+
+      - name: Send result.txt download link to slack
+        uses: rtCamp/action-slack-notify@v2.2.0
+        if: success()
+        env:
+          SLACK_COLOR: "#36a64f"
+          SLACK_TITLE: "SBX Hunting Workflow"
+          SLACK_MESSAGE: "Result.txt uploaded to bashupload.com: ${{ steps.upload_result.outputs.upload_url }}"
+        with:
+          status: ${{ job.status }}
+
+      - name: Use httpx to get page title
+        run: |
+          httpx -l result.txt -title -status-code -follow-redirects -o httpx.txt
+
+      - name: Upload httpx.txt to bashupload.com
+        id: upload_httpx
+        run: |
+          curl --upload-file httpx.txt https://bashupload.com | awk '{print $NF}' > upload_url.txt
+        continue-on-error: true
+
+      - name: Send httpx.txt download link to slack
+        uses: rtCamp/action-slack-notify@v2.2.0
+        if: success()
+        env:
+          SLACK_COLOR: "#36a64f"
+          SLACK_TITLE: "SBX Hunting Workflow"
+          SLACK_MESSAGE: "Httpx.txt uploaded to bashupload.com: ${{ steps.upload_httpx.outputs.upload_url }}"
+        with:
+          status: ${{ job.status }}
